@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<yabe>
+  
+  <!-- Setup general machine information -->
+  <host>
+    <hostname>DEV-TESTIIS</hostname>
+  </host>
+
+  <!-- Setup actions to be executed -->
+  <actions>
+    <action id="1" type="shellcommand">
+      <shellcommand>dir /c</shellcommand>
+      <exitcodesuccess>0</exitcodesuccess>
+      <exitcodesuccess>1</exitcodesuccess>
+      <regexsuccess></regexsuccess>
+    </action> >
+    <action id="2" type="shellcommand">
+      <shellcommand>dir /c</shellcommand>
+      <exitcodesuccess>0</exitcodesuccess>
+      <regexsuccess></regexsuccess>
+    </action> >
+  </actions>
+
+  <!-- Setup notification -->
+  <notification>
+    <email>
+      <smtphost>172.16.5.10</smtphost>
+      <smtpport>25</smtpport>
+      <mailmessage event="onsuccess">
+        <sender name="ISPIN Support" email="support@ispin.ch" />
+        <subject>Backup Notification</subject>
+        <body>The Backup was successful.</body>
+        <recipients>
+          <recipient name="André Gasser" email="andre.gasser@ispin.ch" />
+          <!--
+          <recipient name="Mario Gersbach" email="mario.gersbach@ispin.ch" />
+          <recipient name="Dominik Mathis" email="dominik.mathis@ispin.ch" />
+          -->
+        </recipients>
+      </mailmessage>
+      <mailmessage event="onerror">
+        <sender name="ISPIN Support" email="support@ispin.ch" />
+        <subject>Backup Alert</subject>
+        <body>An error occurred. Please consult the logfiles.</body>
+        <recipients>
+          <recipient name="André Gasser" email="andre.gasser@ispin.ch" />
+          <!--
+          <recipient name="Mario Gersbach" email="mario.gersbach@ispin.ch" />
+          <recipient name="Dominik Mathis" email="dominik.mathis@ispin.ch" />
+          -->
+        </recipients>
+      </mailmessage>
+    </email>
+  </notification>
+</yabe>
