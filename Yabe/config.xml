@@ -3,7 +3,7 @@
   
   <!-- Setup general machine information -->
   <host>
-    <hostname><hostname here></hostname>
+    <hostname>DEV-TESTIIS</hostname>
   </host>
 
   <!-- Setup actions to be executed -->
@@ -23,23 +23,32 @@
 
   <!-- Setup notification -->
   <notification>
-    <email>
-      <smtphost>X.X.X.X</smtphost>
+    <eventlog enabled="true" />
+	<email>
+      <smtphost>172.16.5.10</smtphost>
       <smtpport>25</smtpport>
       <mailmessage event="onsuccess">
-        <sender name="<sender name here>" email="<sender email here>" />
+        <sender name="ISPIN Support" email="support@ispin.ch" />
         <subject>Backup Notification</subject>
         <body>The Backup was successful.</body>
         <recipients>
-          <recipient name="<recipient name here>" email="<recipient email here>" />
+          <recipient name="André Gasser" email="andre.gasser@ispin.ch" />
+          <!--
+          <recipient name="Mario Gersbach" email="mario.gersbach@ispin.ch" />
+          <recipient name="Dominik Mathis" email="dominik.mathis@ispin.ch" />
+          -->
         </recipients>
       </mailmessage>
       <mailmessage event="onerror">
-        <sender name="<sender name here>" email="<sender email here>" />
+        <sender name="ISPIN Support" email="support@ispin.ch" />
         <subject>Backup Alert</subject>
         <body>An error occurred. Please consult the logfiles.</body>
         <recipients>
-          <recipient name="<recipient name here>" email="<recipient email here>" />
+          <recipient name="André Gasser" email="andre.gasser@ispin.ch" />
+          <!--
+          <recipient name="Mario Gersbach" email="mario.gersbach@ispin.ch" />
+          <recipient name="Dominik Mathis" email="dominik.mathis@ispin.ch" />
+          -->
         </recipients>
       </mailmessage>
     </email>

@@ -13,6 +13,9 @@ namespace Yabe
         public string SMTPHost { get; set; }
         public int SMTPPort { get; set; }
 
+        /* Event log settings */
+        public bool eventLogEnabled { get; set; }
+        
         /* Mail message settings */
         public string successMailSenderName { get; set; }
         public string successMailSenderEmail { get; set; }

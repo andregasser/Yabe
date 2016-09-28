@@ -24,7 +24,7 @@ namespace Yabe
             Console.WriteLine("  |::.| |::.|:. |::.. .  |::.. . |");
             Console.WriteLine("  `---' `--- ---`-------'`-------'");
             Console.WriteLine("");      
-            Console.WriteLine("YABE 0.1");
+            Console.WriteLine("YABE 0.2");
             Console.WriteLine("Yet Another Batch Engine");
             Console.WriteLine("This tool is free.");
             Console.WriteLine("Written by A. Gasser 2010");
@@ -58,50 +58,88 @@ namespace Yabe
 
                 }
 
-                // Send success email
-                Mail mail = new Mail();
-                foreach (KeyValuePair<string, string> recipient in yabeConfig.successMailRecipients)
+                // Create event log entry
+                if (yabeConfig.eventLogEnabled)
                 {
-                    mail.AddRecipient(MailRecipientType.To, recipient.Key, recipient.Value);
+                    CreateEventLogEntrySuccess("Batch job finished without errors.");
                 }
-                mail.SetFrom(yabeConfig.successMailSenderEmail, yabeConfig.successMailSenderName);
-                mail.Host = yabeConfig.SMTPHost;
-                mail.Username = "";
-                mail.Password = "";
-                mail.Port = yabeConfig.SMTPPort;
-                mail.Priority = MailPriority.Normal;
-                mail.Subject = "[" + yabeConfig.hostName + "] " + yabeConfig.successMailSubject;
-                mail.SetPlaintextBody(yabeConfig.successMailBody);
-                mail.Send();
+                
+                // Send success email
+                if ((yabeConfig.SMTPHost != "") && (yabeConfig.SMTPHost != null))
+                {
+                    Mail mail = new Mail();
+                    foreach (KeyValuePair<string, string> recipient in yabeConfig.successMailRecipients)
+                    {
+                        mail.AddRecipient(MailRecipientType.To, recipient.Key, recipient.Value);
+                    }
+                    mail.SetFrom(yabeConfig.successMailSenderEmail, yabeConfig.successMailSenderName);
+                    mail.Host = yabeConfig.SMTPHost;
+                    mail.Username = "";
+                    mail.Password = "";
+                    mail.Port = yabeConfig.SMTPPort;
+                    mail.Priority = MailPriority.Normal;
+                    mail.Subject = "[" + yabeConfig.hostName + "] " + yabeConfig.successMailSubject;
+                    mail.SetPlaintextBody(yabeConfig.successMailBody);
+                    mail.Send();
+                }
             }
             catch (ActionFailedException ex)
             {
-                // Send error email
-                Mail mail = new Mail();
-                foreach (KeyValuePair<string, string> recipient in yabeConfig.errorMailRecipients)
+                // Create event log entry
+                if (yabeConfig.eventLogEnabled)
                 {
-                    mail.AddRecipient(MailRecipientType.To, recipient.Key, recipient.Value);
+                    CreateEventLogEntryFailure("Batch job finished with errors.\n"
+                    + "Action id = " + ex.actionId + "\n" 
+                    + "Error message = " + ex.errorMessage);
                 }
-                mail.SetFrom(yabeConfig.errorMailSenderEmail, yabeConfig.errorMailSenderName);
-                mail.Host = yabeConfig.SMTPHost;
-                mail.Username = "";
-                mail.Password = "";
-                mail.Port = yabeConfig.SMTPPort;
-                mail.Priority = MailPriority.High;
-                mail.Subject = "[" + yabeConfig.hostName + "] " + yabeConfig.errorMailSubject;
-                string errorMailBody = "";
-                errorMailBody += yabeConfig.errorMailBody;
-                errorMailBody += "\n\n";
-                errorMailBody += "-----\n";
-                errorMailBody += "The following exception was thrown:\n";
-                errorMailBody += "Action Error Message:\n" + ex.errorMessage + "\n\n";
-                errorMailBody += "Failed Action Id:\n" + ex.actionId + "\n\n";
-                errorMailBody += "Message:\n" + ex.Message + "\n\n";
-                errorMailBody += "Inner Exception:\n" + ex.InnerException + "\n\n";
-                errorMailBody += "Stack Trace:\n" + ex.StackTrace + "\n\n";
-                mail.SetPlaintextBody(errorMailBody);
-                mail.Send();
+                
+                // Send error email
+                if ((yabeConfig.SMTPHost != "") && (yabeConfig.SMTPHost != null))
+                {
+                    Mail mail = new Mail();
+                    foreach (KeyValuePair<string, string> recipient in yabeConfig.errorMailRecipients)
+                    {
+                        mail.AddRecipient(MailRecipientType.To, recipient.Key, recipient.Value);
+                    }
+                    mail.SetFrom(yabeConfig.errorMailSenderEmail, yabeConfig.errorMailSenderName);
+                    mail.Host = yabeConfig.SMTPHost;
+                    mail.Username = "";
+                    mail.Password = "";
+                    mail.Port = yabeConfig.SMTPPort;
+                    mail.Priority = MailPriority.High;
+                    mail.Subject = "[" + yabeConfig.hostName + "] " + yabeConfig.errorMailSubject;
+                    string errorMailBody = "";
+                    errorMailBody += yabeConfig.errorMailBody;
+                    errorMailBody += "\n\n";
+                    errorMailBody += "-----\n";
+                    errorMailBody += "The following exception was thrown:\n";
+                    errorMailBody += "Action Error Message:\n" + ex.errorMessage + "\n\n";
+                    errorMailBody += "Failed Action Id:\n" + ex.actionId + "\n\n";
+                    errorMailBody += "Message:\n" + ex.Message + "\n\n";
+                    errorMailBody += "Inner Exception:\n" + ex.InnerException + "\n\n";
+                    errorMailBody += "Stack Trace:\n" + ex.StackTrace + "\n\n";
+                    mail.SetPlaintextBody(errorMailBody);
+                    mail.Send();
+                }
             }
+        }
+        #endregion
+
+        #region CreateEventLogEntrySuccess
+        private static void CreateEventLogEntrySuccess(string message)
+        {
+            EventLog eventLog = new EventLog();
+            eventLog.Source = "Yabe";
+            eventLog.WriteEntry(message, EventLogEntryType.Information);
+        }
+        #endregion
+
+        #region CreateEventLogEntryFailure
+        private static void CreateEventLogEntryFailure(string message)
+        {
+            EventLog eventLog = new EventLog();
+            eventLog.Source = "Yabe";
+            eventLog.WriteEntry(message, EventLogEntryType.Error);
         }
         #endregion
 
@@ -230,6 +268,7 @@ namespace Yabe
             
             while (reader.Read())
             {
+                // Read email configuration block
                 if (reader.NodeType == XmlNodeType.Element && reader.Name == "email")
                 {
                     XmlReader reader2 = reader.ReadSubtree();
@@ -316,6 +355,21 @@ namespace Yabe
                                 }
                             }
                         }
+                    }
+                }
+
+                // Read event log configuration block
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == "eventlog")
+                {
+                    string eventLogEnabledVal = reader.GetAttribute("enabled");
+                    
+                    if (eventLogEnabledVal == "true")
+                    {
+                        yabeConfig.eventLogEnabled = true;
+                    }
+                    else
+                    {
+                        yabeConfig.eventLogEnabled = false;
                     }
                 }
             }
